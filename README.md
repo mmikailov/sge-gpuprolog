@@ -27,8 +27,8 @@ Set up `prolog` and `epilog` in the queue.
 
     qconf -mq gpu.q
 
-    prolog                sgeadmin@/path/to/sge-gpuprolog/prolog.sh
-    epilog                sgeadmin@/path/to/sge-gpuprolog/epilog.sh
+    prolog                root@/path/to/sge-gpuprolog/prolog.sh
+    epilog                root@/path/to/sge-gpuprolog/epilog.sh
 
 Alternatively, you may set up a parallel environment for GPU and set
 `start_proc_args` and `stop_proc_args` to the packaged scripts.
