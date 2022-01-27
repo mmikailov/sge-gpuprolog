@@ -112,6 +112,7 @@ fi
 echo "SGE_GPU=$SGE_GPU" >> ${LOG_FILE}
 
 # Set the environment.
-echo SGE_GPU="$(echo $SGE_GPU | sed -e 's/^ //' | sed -e 's/ /,/g')" >> $ENV_FILE
+# echo SGE_GPU="$(echo $SGE_GPU | sed -e 's/^ //' | sed -e 's/ /,/g')" >> $ENV_FILE
+echo CUDA_VISIBLE_DEVICES="$(echo $SGE_GPU | sed -e 's/^ //' | sed -e 's/ /,/g')" >> $ENV_FILE
 echo "Success prolog." >> ${LOG_FILE}
 exit 0 
