@@ -14,7 +14,7 @@ echo "----- In prolog -----" >> ${LOG_FILE}
 
 QSTAT=/opt/sge_root/bin/lx-amd64/qstat
 
-# Input: type of GPU (gpus or gpus_titan as of 12/30/2020)
+# Input: type of GPU (gpu)
 # Returns number of GPU of this type requested
 GpuNum () {
    echo "GPU type: $1" >> ${LOG_FILE}
@@ -50,16 +50,9 @@ NOT_LOCKED_GPUS=$?		# return value from NotLockedGpus ()
 
 # Query how many gpus to allocate.
 
-# Check if "gpus" type of GPUs were requested
-GpuNum gpus
+# Check if "gpu" type of GPUs were requested
+GpuNum gpu
 NGPUS=$?		# return value from GpuNum ()		
-
-if [ $NGPUS -le 0  ]
-then
-	# Check if "gpus_titan" type of GPUs were requested
-	GpuNum gpus_titan
-	NGPUS=$?				
-fi
 
 if [ $NGPUS -le 0 ]
 then
@@ -67,34 +60,27 @@ then
   exit 0
 fi
 
-# NGPUS=$(expr $NGPUS \* ${NSLOTS=1}) # no need any more, 8/18/2021
+NGPUS=$(expr $NGPUS \* ${NSLOTS=1}) 
 
 ENV_FILE=$SGE_JOB_SPOOL_DIR/environment 
-
-# echo "ENV_FILE=$ENV_FILE" >> ${LOG_FILE}
-# ls -alsh $ENV_FILE  >> ${LOG_FILE}
 
 # Allocate and lock GPUs.
 export SGE_GPU=""
 i=0
-# device_ids=$(nvidia-smi -L | cut -f1 -d":" | cut -f2 -d" " | xargs shuf -e)
 
 # Release (unlock) all GPUs which are not in use (memory used = 0) if not enough of them were found unlocked  
 echo "Release (unlock) all GPUs which are not in use (memory used = 0) if not enough of them were found unlocked." >> ${LOG_FILE}
-# num_found_gpus=$(echo -n "$device_ids" | wc -w)
-# if [ $num_found_gpus -eq $NGPUS ]
 if [ $NOT_LOCKED_GPUS -lt $NGPUS ]
 then
 	mem_use=($(nvidia-smi --query-gpu=utilization.memory --format=csv,noheader,nounits)) # returns memory used by all GPUs
-	# num_found_gpus=${#mem_use[*]}
 	echo "Clean up" >> ${LOG_FILE}
 	for device_id in $device_ids
 	do
 	  	lockfile=/tmp/lock-gpu$device_id
 		if [ -d $lockfile ] && [ ${mem_use[$device_id]} -eq 0  ]
 	  	then
-	    	rmdir $lockfile
-	    	echo "Removed $lockfile in prolog." >> ${LOG_FILE}
+	    	   rmdir $lockfile
+	    	   echo "Removed $lockfile in prolog." >> ${LOG_FILE}
 		fi
 	done
 fi
@@ -129,4 +115,3 @@ echo "SGE_GPU=$SGE_GPU" >> ${LOG_FILE}
 echo SGE_GPU="$(echo $SGE_GPU | sed -e 's/^ //' | sed -e 's/ /,/g')" >> $ENV_FILE
 echo "Success prolog." >> ${LOG_FILE}
 exit 0 
-
